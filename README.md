@@ -16,4 +16,5 @@ A Python-based Student Management System.
 - GitHub
 
 ## Status
-🚧 Currently under development.
+🚧 I think its Perfect.
+
