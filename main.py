@@ -1,102 +1,172 @@
+import json
+import os
+students = {}
+
+def load_students():
+    global students
+    students = {}
+# Loads the data.json file for managing student details
+    if os.path.exists("data.json"):
+        try:
+            with open("data.json", "r") as file:
+                data = json.load(file)
+                if not isinstance(data, dict):
+                    print("Invalid student database format")
+                    return
+                valid_dict = {}
+                skipped = 0
+                for roll_no, details in data.items():
+                    if not roll_no.isdigit():
+                        print("Roll no is not valid")
+                        skipped += 1
+                        continue
+                    if not isinstance(details, dict):
+                        print("Invalid student record")
+                        skipped += 1
+                        continue
+                    if "name" not in details or "age" not in details :
+                        print("Student name or age is missing")
+                        skipped += 1
+                        continue
+                    if not isinstance(details["age"], int) or isinstance(details["age"], bool) or details["age"]<= 0:
+                        print("Age is not valid ")
+                        skipped += 1
+                        continue
+                    if not isinstance(details["name"], str) or details["name"].strip() == "":
+                        print("Name is not valid")
+                        skipped += 1
+                        continue  
+                    valid_dict[roll_no] = details
+                    
+                students = valid_dict
+                print(f"{len(students)} students loaded successfully")
+                print(f"{skipped} invalid entries skipped")
+        except json.JSONDecodeError:
+            print("The JSON contains invalid entries")
+        except PermissionError:
+            print("Permission to file is denied")
+        except OSError as e:
+            print("File operation failed:", e)
+
+def save_students():
+    # Saves the current record to data.json
+    try:
+        with open("data.json" , "w")as file:
+            json.dump(students ,file , indent=4)
+    except PermissionError:
+        print("Permission denied: Cannot save student data")
+    except OSError as e:
+        print("File operation failed:" , e)
+
+load_students()
+
 def display_menu():
-    print("\n Welcome Student Mangaement System")
+    print("\n Welcome to Student Management System")
     print("1. Add Student")
     print("2. View Student")
     print("3. Update Student")
     print("4. Delete Student")
     print("5. Search Student")
     print("6. Exit")
-students = {}
 
+# Validate's the student's age
+def get_valid_age():
+    while True:
+        age = input("Enter age: ")
+        
+        if not age.isdigit():
+            print("It's invalid")
+            continue
+        
+        age = int(age)
+        if age <= 0:
+            print("Zero is not valid")
+            continue
+        return age
+
+# Validate's the student's name
+def get_valid_name():
+    while True:
+        name = input("Enter Name: ")
+        f = name.strip()
+
+        if f == "":
+            print("Name shouldn't be empty")
+            continue
+
+        if not f.replace(" ", "").isalpha():
+            print("Invalid name")
+            continue
+
+        return f
+    
 def add_student():
-    Roll_no = input("Enter Roll Number : ").strip()
-    if not Roll_no.isdigit():
+    roll_no = input("Enter Roll Number : ").strip()
+    if not roll_no.isdigit():
         print("Roll number must contain only digits!")
         return
-    else:
-        if Roll_no in students:
-            print("Already exists")
-            return
-        else:
-            print("Continue adding student...")
-            name = input("Enter student name:  ")
-            age = input("Enter student age: ")
-            students[Roll_no]={"name" : name,
-                            "age" : age}
-            print("Student addedd Successfully") 
-            save_students()
+    if roll_no in students:
+        print("Already exists")
+        return
+    name = get_valid_name()
+    age = get_valid_age()
+    students[roll_no]={"name" : name,
+                        "age" : age}
+    print("Student added successfully") 
+    save_students()
 
 def view_students():
     if not students:
         print("No student found")
-    else:
-        for Roll_no, details in students.items():
-            print("\nRoll_num: ", Roll_no)
-            print("Name : ", details["name"])
-            print("Age: ", details["age"])
+        return
+    for roll_no, details in students.items():
+        print("\nroll_no: ", roll_no)
+        print("Name : ", details["name"])
+        print("Age: ", details["age"])
 
 def search_student():
-    Roll_num = input("Enter Roll num: ").strip()
-    if not Roll_num.isdigit():
+    roll_no = input("Enter Roll num: ").strip()
+    if not roll_no.isdigit():
         print("Roll number must contain only digits!")
         return
-    else:
 
-        if Roll_num not in students:
-            print("Roll_num Does'nt exists")
-            return 
-        else:
-            details = students[Roll_num]
+    if roll_no not in students:
+        print("Roll number doesn't exists")
+        return 
 
-            print("\nRoll_no: ", Roll_num)
-            print("Name: ", details["name"])
-            print("Age: ", details["age"])
+    details = students[roll_no]
+
+    print("\nroll_no: ", roll_no)
+    print("Name: ", details["name"])
+    print("Age: ", details["age"])
 
 def update_student():
-    Roll_no = input("Enter Roll num: ").strip()
-    if not Roll_no.isdigit():
+    roll_no = input("Enter Roll no: ").strip()
+    if not roll_no.isdigit():
         print("Roll number must contain only digits!")
+        return 
+    if roll_no not in students:
+        print("Student not found")
         return
-    else:    
-        if Roll_no not in students:
-            print("Student not found")
-            return
-        else:
-            name = input("Enter new name: ")
-            age = input("Enter new age: ")
-            students[Roll_no]["name"]= name
-            students[Roll_no]["age"]= age 
-            print("Update Successful")
-            save_students()
+    
+    name = get_valid_name()
+    age = get_valid_age()
+    students[roll_no]["name"]= name
+    students[roll_no]["age"]= age 
+    print("Update Successful")
+    save_students()
 
 def delete_student():
-    Roll_no = input("Enter Roll num: ").strip()
-    if not Roll_no.isdigit():
+    roll_no = input("Enter Roll num: ").strip()
+    if not roll_no.isdigit():
         print("Roll number must contain only digits!")
         return
-    else:
-        if Roll_no not in students:
-            print("Student not found")
-        else:
-            students.pop(Roll_no)
-            print("Student data deleted successfully")
-            save_students()
-
-import json
-import os
-print("JSON file location:", os.path.abspath("data.json"))
-
-def save_students():
-    with open("data.json", "w") as file:
-        json.dump(students, file, indent=4)
-def load_students():
-    global students
-
-    if os.path.exists("data.json"):
-        with open("data.json", "r") as file:
-            students = json.load(file)
-
-load_students()
+    if roll_no not in students:
+        print("Student not found")
+        return
+    students.pop(roll_no)
+    print("Student data deleted successfully")
+    save_students()
     
 
 while True:
